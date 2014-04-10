@@ -43,7 +43,8 @@ getIds = (req, res, next) ->
     else
       for rel,link of result._links
         if rel in ["first", "last", "next", "prev"]
-          link?.href = "http://#{req.headers.host}" +
+          if link?
+            link.href = "http://#{req.headers.host}" +
             req.url.replace /page=\d+/, "page=#{link?.href}"
       res.charSet 'UTF-8'
       res.send result
