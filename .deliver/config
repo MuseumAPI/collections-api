@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-APP="collections-api"
-HOSTS="scrapi.org"
-PORT="80"
+APP="scrapi"
+HOSTS="scrapi.metmuseum.org"
+PORT="5000"
 STRATEGY="nodejs"
-SUPERVISOR="smf"
