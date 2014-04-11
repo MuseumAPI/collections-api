@@ -35,7 +35,6 @@ getIds = (req, res, next) ->
   query = req.params.query or '*'
   featured = req.params.featured? or 'false'
   images = req.params.images?[0] is 't' or 'false'
-  _page_to_href = (page) -> "http://#{req.headers.host}/ids?page=#{page}&query=#{query}&featured=#{featured}&images=#{images}"
 
   if featured
     url = "http://www.metmuseum.org/collections/browse-highlights?rpp=50&pg=#{page}&ft=#{query}"
@@ -47,18 +46,17 @@ getIds = (req, res, next) ->
       res.send err
     else
       for rel,page of result.pages
-        result['_links'][rel] = _page_to_href page
+        result['_links'][rel] = href: "http://#{req.headers.host}/ids?page=#{page}&query=#{query}&featured=#{featured}&images=#{images}"
 
       # take each id in the collection and create a link to it for convinience
-      console.log result.ids
-      result.collection = items: href: (_page_to_href id for id in result.ids)
+      result.collection = items: href: ("http://#{req.headers.host}/object/#{id}" for id in result.ids)
       res.charSet 'UTF-8'
       res.send result
 
 getObject = (req, res, next) ->
   url = "#{scrape_url}/#{req.params.id}"
   _getSomething req, url, parseObject, (err, result) ->
-    object['_links']['related-artwork'] = ("http://#{req.headers.host}/object/#{id}" for id in result['related-artwork-ids'])
+    result['_links']['related-artwork'] = ("http://#{req.headers.host}/object/#{id}" for id in result['related-artwork-ids'])
     res.charSet 'UTF-8'
     res.send err or result
 
@@ -68,17 +66,17 @@ getRandomObject = (req, res, next) ->
   response = res
 
   client.get "/ids?" + images, (err, req, res, obj) ->
-    if max = obj._links?.last?.href
-      random_page = Math.floor(Math.random() * +(/page=(\d+)/.exec(max)?[1])) + 1
+    if max = obj.pages.last
+      random_page = Math.floor(Math.random() * max) + 1
 
       client.get "/ids?page=#{random_page}&" + images, (err, req, res, obj) ->
-        ids = obj.collection.items
-        random_page = ids[Math.floor(Math.random() * ids.length)].href
+        hrefs = obj.collection.items.href
+        random_object_page = hrefs[Math.floor(Math.random()*hrefs.length)]
 
-        client.get random_page, (err, req, res, obj) ->
+        client.get random_object_page, (err, req, res, obj) ->
           response.send err or obj
     else
-      res.send new restify.NotFoundError "cannot find the last page of ids"
+      response.send new restify.NotFoundError "cannot find the last page of ids"
 
 ###
   Server Options
