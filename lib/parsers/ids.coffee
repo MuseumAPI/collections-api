@@ -23,23 +23,16 @@ parseIds = (body, cb) ->
   $ = cheerio.load body
 
   if $('.artefact-listing li').length
-    items = (href: _.a_to_a($(a)) for a in $('.object-image'))
-    ids = collection: {items}
+    result = ids: (_.a_to_id $(a) for a in $('.object-image'))
 
-    get_id = (selector) -> /pg=(\d+)/.exec($(selector)?[0]?.attribs?.href)?[1]
-    [prev, next, last] = (get_id sel for sel in ['.prev a', '.next a', '.pagination li:last-child a'])
+    get_id = (selector) -> /pg=(\d+)/.exec($(selector)?.first()?.attr('href'))?[1]
+    [prev, next, last] = (+ get_id sel for sel in ['.prev a', '.next a', '.pagination li:last-child a'])
 
-    ids['_links'] =
-      first: href: 1
-      next: href: next
-      prev: href: prev
-      last: href: last
+    pages = {next, prev, last, first: 1}
+    delete pages[page] for page,number of pages when isNaN number
+    result['pages'] = pages
 
-    for link,href of ids['_links']
-      if /undefined/.test href.href
-        delete ids['_links'][link]
-
-    cb null, ids
+    cb null, result
   else
     cb new restify.NotFoundError
 

@@ -52,9 +52,10 @@ parseObject = (body, cb) ->
       # Split on ; that are not inside ()
       when 'provenance' then object[category] = _.remove_empty _.trim content.split(/;(?!((?![\(\)]).)*\))/)
 
+  object["related-artwork-ids"] = (_.a_to_id $(a) for a in $('.related-content-container .object-info a')) or null
+
   delete object[key] for key,value of object when value is null or value?.length is 0
-  object['_links'] = "related-artworks": (href: (_.a_to_a $(a)) for a in $('.related-content-container .object-info a')) or null
-  object['_links']["related-content"] = ({rel: $(e).find('a').text().trim(), href: $(e).find('a').attr('href'), date: $(e).find('span').text().trim()} for e in $('ul.related-content-list li')) or null
+  object['_links'] = "related-content": ({rel: $(e).find('a').text().trim(), href: $(e).find('a').attr('href'), date: $(e).find('span').text().trim()} for e in $('ul.related-content-list li')) or null
   cb null, object
 
 module.exports = parseObject

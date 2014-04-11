@@ -21,6 +21,7 @@ _getSomething = (req, url, parser, cb) ->
         if err
           cb err, result
         else
+          result['_links'] ?= {}
           result['_links'].self = href: 'http://' + req.headers.host + req.getHref()
           result['_links'].source = href: url
           # Cache objects
@@ -32,7 +33,11 @@ getIds = (req, res, next) ->
   # add default params
   page = req.params.page or 1
   query = req.params.query or '*'
-  if req.params.featured?
+  featured = req.params.featured? or 'false'
+  images = req.params.images?[0] is 't' or 'false'
+  _page_to_href = (page) -> "http://#{req.headers.host}/ids?page=#{page}&query=#{query}&featured=#{featured}&images=#{images}"
+
+  if featured
     url = "http://www.metmuseum.org/collections/browse-highlights?rpp=50&pg=#{page}&ft=#{query}"
   else
     url = "#{scrape_url}?rpp=60&pg=#{page}&ft=#{query}"
@@ -41,17 +46,19 @@ getIds = (req, res, next) ->
     if err
       res.send err
     else
-      for rel,link of result._links
-        if rel in ["first", "last", "next", "prev"]
-          if link?
-            link.href = "http://#{req.headers.host}" +
-            req.url.replace /page=\d+/, "page=#{link?.href}"
+      for rel,page of result.pages
+        result['_links'][rel] = _page_to_href page
+
+      # take each id in the collection and create a link to it for convinience
+      console.log result.ids
+      result.collection = items: href: (_page_to_href id for id in result.ids)
       res.charSet 'UTF-8'
       res.send result
 
 getObject = (req, res, next) ->
   url = "#{scrape_url}/#{req.params.id}"
   _getSomething req, url, parseObject, (err, result) ->
+    object['_links']['related-artwork'] = ("http://#{req.headers.host}/object/#{id}" for id in result['related-artwork-ids'])
     res.charSet 'UTF-8'
     res.send err or result
 
@@ -148,6 +155,7 @@ docs.get "/ids", "Gets a list of ids (60 per request) found in the collection",
     required: false, dataType: 'boolean'
     paramType: 'query' }
   ]
+
 
 ###
   Static files
