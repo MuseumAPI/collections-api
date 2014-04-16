@@ -22,7 +22,7 @@ _getSomething = (req, url, parser, cb) ->
           cb err, result
         else
           result['_links'] ?= {}
-          result['_links'].self = href: 'http://' + req.headers.host + req.getHref()
+          result['_links'].self = href: req.getHref()
           result['_links'].source = href: url
           # Cache objects
           if result.id? and cache? and /object/.test(req.getPath())
