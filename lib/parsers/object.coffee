@@ -35,7 +35,9 @@ parseObject = (body, cb) ->
   # make sure 'where' always returns an array
   object['where'] = [object['where']] if typeof(object['where']) is 'string'
   object['gallery-id'] = _.a_to_id($('.gallery-id a')) or null
-  object['image'] = $('.image-container img').attr('src')?.match(/(^http.*)/)?[0]?.replace('web-large','original')
+  object['oasc'] = $('.oasc')?
+  object['terms'] = 'http://www.metmuseum.org' + ($('.imgResources')?.attr('href') or '/information/terms-and-conditions')
+  object['image'] = $('.imgDownload')?.parent()?.attr('href') or $('.image-container img').attr('src')?.match(/(^http.*)/)?[0]?.replace('web-large','original')
   object['related-images'] = ($(img).attr('src')?.replace('web-additional','original') for img in $('.tab-content.visible .object img') when $(img).attr('src').match(/images.metmuseum.org/)) or null
 
   # make sure 'in the museum' gets renamed as 'department'
