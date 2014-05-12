@@ -19,6 +19,7 @@
   "dependencies": {
     "cheerio": "~0.13.1",
     "coffee-script": "^1.7.1",
+    "imagecolors": "^0.10.5",
     "node-dev": "^2.1.6",
     "redis": "~0.10.1",
     "restify": "^2.6.3",

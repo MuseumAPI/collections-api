@@ -12,6 +12,7 @@
         console.log err or obj
 ###
 
+imagecolors = require 'imagecolors'
 cheerio = require 'cheerio'
 _ = require '../util'
 
@@ -56,8 +57,13 @@ parseObject = (body, cb) ->
 
   object["related-artwork-ids"] = (_.a_to_id $(a) for a in $('.related-content-container .object-info a')) or null
 
-  delete object[key] for key,value of object when value is null or value?.length is 0
-  object['_links'] = "related-content": ({rel: $(e).find('a').text().trim(), href: $(e).find('a').attr('href'), date: $(e).find('span').text().trim()} for e in $('ul.related-content-list li')) or null
-  cb null, object
+  # extract the 5 most dominant colors
+  imagecolors.extract object['image'], 5, (err, colors) ->
+    unless err
+      object['palette'] = colors.map (color) -> color.hsl
+
+    delete object[key] for key,value of object when value is null or value?.length is 0
+    object['_links'] = "related-content": ({rel: $(e).find('a').text().trim(), href: $(e).find('a').attr('href'), date: $(e).find('span').text().trim()} for e in $('ul.related-content-list li')) or null
+    cb null, object
 
 module.exports = parseObject
